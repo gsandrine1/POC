@@ -17,16 +17,19 @@ jobs:
         java-version: '11'
         distribution: 'temurin'
         cache: maven 
-        
+
     - name: Build with Maven
       run: |
         mvn -B package --file pom.xml
-        
-    - name: Publish to Docker Hub
-      uses: docker/build-push-action@v1
-      with:
-       username: ${{ secrets.DOCKERHUB_USERNAME }}
-       password: ${{ secrets.DOCKERHUB_PASSWORD }}
-       repository: sandrine123/pocgithub
-       tags: ${{github.run_number}}
 
+    - name: Push to container registry
+      env:
+        TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        USER: ${{ github.actor }}
+        REG: ghcr.io
+        PACKAGE: Oteemo/POC
+      run: |
+       echo "${TOKEN}" | docker login "${REG}" -u "${USER}" --password-stdin
+        docker build . --tag ${REG}/${PACKAGE}:latest
+        docker run ${REG}/${PACKAGE}:latest
+        docker push ${REG}/${PACKAGE}:latest
