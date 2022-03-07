@@ -27,7 +27,7 @@ jobs:
         TOKEN: ${{ secrets.GITHUB_TOKEN }}
         USER: ${{ github.actor }}
         REG: ghcr.io
-        PACKAGE: Oteemo/POC
+        PACKAGE: oteemo/poc
       run: |
        echo "${TOKEN}" | docker login "${REG}" -u "${USER}" --password-stdin
         docker build . --tag ${REG}/${PACKAGE}:latest
