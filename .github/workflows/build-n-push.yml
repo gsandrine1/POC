@@ -48,5 +48,4 @@ jobs:
       run: |
        echo "${TOKEN}" | docker login "${REG}" -u "${USER}" --password-stdin
         docker build . --tag ${REG}/${PACKAGE}:latest
-        docker run ${REG}/${PACKAGE}:latest
         docker push ${REG}/${PACKAGE}:latest
