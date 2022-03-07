@@ -15,8 +15,11 @@ public class HelloWorld {
   public static void main(String[] args) throws Exception {
     Integer port = 8000;
     HttpServer server = HttpServer.create(new InetSocketAddress(port), 0);
+
+    Integer unused = 0;
+
     server.createContext("/", new MyHandler());
-    server.setExecutor(null); // creates a default executor
+    server.setExecutor(null);
     server.start();
     System.out.println("Started demo server on port: " + port);
   }
