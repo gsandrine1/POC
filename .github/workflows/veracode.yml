@@ -13,51 +13,52 @@ jobs:
       actions: read
 
     steps:
-      # Checkout your repository
-      - name: Checkout code
+      # Step 1: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Set up Java 8 (Temurin distribution)
-      - name: Set up Java
+      # Step 2: Set up Java (Temurin 8)
+      - name: Set up Java 8
         uses: actions/setup-java@v4
         with:
           java-version: 8
           distribution: 'temurin'
 
-      # Build the project using Maven (no subdirectory needed if pom.xml is in the root)
+      # Step 3: Build with Maven
       - name: Build with Maven
         run: mvn clean package -B --file pom.xml
 
-      # Zip the compiled output (recommended to scan only what's needed)
-      - name: Prepare scan artifact
+      # Step 4: Zip compiled output for Veracode scanning
+      - name: Zip target directory
         run: zip -r veracode-scan-target.zip ./target
 
-      # Download the Veracode Static Analysis Pipeline scan jar
-      - name: Download Veracode Pipeline Scan
+      # Step 5: Download Veracode Pipeline Scan tool
+      - name: Download Veracode Pipeline Scan tool
         run: |
           curl --silent --show-error --fail -O https://downloads.veracode.com/securityscan/pipeline-scan-LATEST.zip
           unzip -o pipeline-scan-LATEST.zip
 
-      # Run Veracode Pipeline scan
+      # Step 6: Run Veracode Pipeline Scan
       - name: Run Veracode Scan
         run: |
           java -jar pipeline-scan.jar \
-          --veracode_api_id "${{secrets.VERACODE_API_ID}}" \
-          --veracode_api_key "${{secrets.VERACODE_API_KEY}}" \
+          --veracode_api_id "${{ secrets.VERACODE_API_ID }}" \
+          --veracode_api_key "${{ secrets.VERACODE_API_KEY }}" \
           --fail_on_severity="Very High, High" \
           --file veracode-scan-target.zip
         continue-on-error: true
 
-      # Convert pipeline scan output to SARIF format 
+      # Step 7: Convert results.json to SARIF only if scan succeeded
       - name: Convert scan results to SARIF
+        if: success()
         id: convert
         uses: veracode/veracode-pipeline-scan-results-to-sarif@ff08ae5b45d5384cb4679932f184c013d34da9be
         with:
           pipeline-results-json: results.json
 
-      # Upload SARIF results to GitHub
+      # Step 8: Upload SARIF results to GitHub code scanning (if file exists)
       - name: Upload SARIF to GitHub
+        if: success()
         uses: github/codeql-action/upload-sarif@v3
         with:
           sarif_file: veracode-results.sarif
-
